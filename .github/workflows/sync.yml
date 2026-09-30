@@ -1,0 +1,32 @@
+name: Sync Knowledge Hub
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # 매시 정각(UTC 기준, 한국시간 +9시간)마다 실행
+  workflow_dispatch:        # Actions 탭에서 수동 실행 버튼도 사용 가능
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: 구글 시트 → index.html 빌드
+        run: python build.py
+
+      - name: 변경 사항이 있으면 커밋 & 푸시
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --staged --quiet || git commit -m "자동 동기화: 구글 시트 최신 내용 반영"
+          git push

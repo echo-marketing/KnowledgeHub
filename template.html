@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  :root {
+    /* 전체/서피스 배경 */
+    --paper: #F7F8FA;         /* 페이지 전체 배경 */
+    --paper-raised: #FFFFFF;  /* 콘텐츠/입력 영역 배경 */
+    --row-hover: #FAFBFF;     /* 테이블 행 hover */
+
+    /* 텍스트 */
+    --ink: #182033;           /* 기본 텍스트 */
+    --ink-soft: #7A8394;      /* 보조 텍스트 */
+    --muted: #9AA2AF;         /* 약한 보조 텍스트 */
+
+    /* 구분선 (기존 --line / --line-strong 모두 동일 톤으로 통일) */
+    --line: #E4E7EC;
+    --line-strong: #E4E7EC;
+
+    /* 포인트 컬러 (블루) */
+    --navy: #3157D5;          /* 포인트 컬러 (기존 --navy 변수를 그대로 accent로 재사용) */
+    --navy-soft: #EEF2FF;     /* 포인트 배지 배경 */
+
+    /* Must Read / 강조 레드 */
+    --red: #C64A45;
+    --red-soft: #FFF1F0;
+    --red-line: #F1C9C6;
+
+    /* 활성 상태(따봉 등)에 쓰는 보조 포인트 — accent와 동일하게 통일 */
+    --teal: #3157D5;
+    --teal-soft: #EEF2FF;
+
+    /* 표 텍스트 톤 */
+    --text-heading: #8C95A4;  /* 표 헤더 */
+    --text-summary: #626C7F;  /* 핵심 요약 */
+    --text-meta: #7C8698;     /* 날짜 등 부가정보 */
+    --text-input: #4F596D;    /* 입력 텍스트 */
+
+    /* 카테고리 텍스트 메뉴 */
+    --cat-text: #7A8394;
+    --cat-count: #AAB0BA;
+
+    /* 더 이상 개별 카테고리 색상을 쓰지 않으므로 forest/mustard/plum/brick 토큰은 제거 */
+
+    --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+    --font-serif: var(--font-sans);  /* 세리프 완전 제거 — 산세리프로 통일 */
+    --font-mono: var(--font-sans);   /* 모노스페이스도 제거하고 tabular-nums로 정렬 */
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 36px 28px 80px;
+  }
+
+  /* ---------- Footer (의견 남기기) ---------- */
+  .site-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .footer-text {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .feedback-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 4px;
+    background: var(--ink);
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.12s ease;
+  }
+  .feedback-link:hover { background: var(--navy); }
+  .feedback-link:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+  @media (max-width: 640px) {
+    .site-footer { flex-direction: column; align-items: stretch; text-align: center; }
+    .feedback-link { justify-content: center; }
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--ink);
+    flex-wrap: wrap;
+  }
+
+  .masthead h1 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 40px;
+    letter-spacing: -0.01em;
+    margin: 0;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .echo-mark {
+    margin-right: 10px;
+  }
+
+  .masthead .sub {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+    font-family: var(--font-sans);
+    font-style: normal;
+  }
+
+  .masthead-meta {
+    min-width: 0; /* 긴 인기 아티클 제목이 화면 밖으로 밀어내지 않도록 */
+    text-align: right;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  .masthead-meta .edition {
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .popular-panels {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    justify-content: flex-end;
+  }
+
+  .weekly-popular {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper-raised);
+    text-align: left;
+    min-width: 200px;
+    max-width: 240px;
+    flex: 1 1 220px;
+  }
+  .wp-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--red);
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+    font-family: var(--font-sans);
+  }
+  .wp-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 11.5px;
+    padding: 4px 0;
+    border-top: 1px solid var(--line);
+  }
+  .wp-row:first-child { border-top: none; }
+  .wp-rank {
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    width: 12px;
+    flex-shrink: 0;
+  }
+  .wp-title {
+    flex: 1;
+    min-width: 0;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .wp-views {
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-size: 10.5px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 640px) {
+    .masthead-meta { width: 100%; }
+    .popular-panels { flex-direction: column; }
+    .weekly-popular { max-width: 100%; min-width: 0; flex-basis: auto; }
+  }
+
+  .wp-hint {
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--muted);
+    font-style: normal;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 0;
+    margin-top: 0;
+    background: var(--paper-raised);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stat {
+    flex: 1;
+    padding: 16px 4px;
+    border-right: 1px solid var(--line);
+    text-align: center;
+  }
+  .stat:last-child { border-right: none; }
+
+  .stat .num {
+    font-family: var(--font-sans);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .stat .lbl {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  /* ---------- Category text menu ---------- */
+  .category-menu {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    margin: 4px 0 18px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cat-menu-label {
+    font-size: 12px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .cat-item {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 3px 1px 9px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--cat-text);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .cat-item-count {
+    font-size: 11px;
+    color: var(--cat-count);
+    font-variant-numeric: tabular-nums;
+  }
+  .cat-item:hover:not(.active) { color: var(--ink); }
+  .cat-item:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+  }
+  .cat-item.active {
+    color: var(--navy);
+    font-weight: 500;
+    border-bottom-color: var(--navy);
+  }
+  .cat-item.active .cat-item-count { color: var(--navy); }
+
+  /* ---------- Filter bar ---------- */
+  .filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 22px 0 4px;
+  }
+
+  .search-box {
+    flex: 1 1 220px;
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 9px 12px 9px 32px;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    border-radius: 4px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-input);
+  }
+  .search-box input::placeholder { color: var(--muted); }
+  .search-box input:focus { outline: 2px solid var(--navy); outline-offset: -1px; }
+  .search-box::before {
+    content: "⌕";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  select {
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    border-radius: 4px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-input);
+    cursor: pointer;
+  }
+  select:focus { outline: 2px solid var(--navy); outline-offset: -1px; }
+
+  .toggle-chip {
+    padding: 9px 14px;
+    border: 1px solid var(--red-line);
+    border-radius: 4px;
+    background: var(--paper-raised);
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--red);
+    white-space: nowrap;
+    user-select: none;
+  }
+  .toggle-chip:hover { background: var(--red-soft); }
+  .toggle-chip:focus-visible { outline: 2px solid var(--navy); outline-offset: 1px; }
+  .toggle-chip.active {
+    background: var(--red-soft);
+    border-color: var(--red);
+    color: var(--red);
+    font-weight: 600;
+  }
+
+  .refresh-btn {
+    padding: 9px 14px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    background: var(--ink);
+    color: var(--paper-raised);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+  }
+  .refresh-btn:hover { background: var(--text-input); }
+  .refresh-btn:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+  .refresh-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .date-range-inputs { display: inline-flex; align-items: center; gap: 6px; }
+  .date-input {
+    padding: 8px 8px;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    border-radius: 4px;
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    color: var(--text-input);
+  }
+  .date-input:focus { outline: 2px solid var(--navy); outline-offset: -1px; }
+  .date-sep { color: var(--muted); font-size: 12px; }
+
+  .toggle-chip.neutral {
+    border-color: var(--line);
+    color: var(--ink-soft);
+  }
+  .toggle-chip.neutral:hover { background: var(--navy-soft); }
+  .toggle-chip.neutral.active {
+    background: var(--navy-soft);
+    border-color: var(--navy);
+    color: var(--navy);
+    font-weight: 600;
+  }
+
+  /* ---------- Active filter chips ---------- */
+  .active-filters {
+    display: none;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 4px;
+  }
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px 4px 10px;
+    background: var(--navy-soft);
+    color: var(--navy);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .chip-x {
+    background: none;
+    border: none;
+    color: var(--navy);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0;
+  }
+  .chip-x:hover { opacity: 0.65; }
+  .chip-x:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+
+  /* ---------- Table ---------- */
+  .table-scroll {
+    margin-top: 18px;
+    overflow-x: auto;
+    border-top: 1px solid var(--line);
+    background: var(--paper-raised);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 820px;
+  }
+
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-heading);
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:hover { color: var(--ink); }
+  thead th .arrow { font-size: 9px; margin-left: 3px; opacity: 0.6; }
+
+  tbody tr.row {
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  tbody tr.row:hover { background: var(--row-hover); }
+  tbody tr.row.expanded { background: var(--row-hover); }
+
+  tbody td {
+    padding: 12px 10px;
+    font-size: 13px;
+    vertical-align: top;
+  }
+
+  .stars {
+    color: var(--red);
+    letter-spacing: 1px;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    background: var(--navy-soft);
+    color: var(--navy);
+  }
+
+  .col-title {
+    max-width: 360px;
+  }
+  .col-title .headline {
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  .col-title .subtag {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .col-summary {
+    max-width: 320px;
+    color: var(--text-summary);
+    line-height: 1.6;
+    font-size: 12.5px;
+    font-weight: 400;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .status-must { background: var(--red-soft); color: var(--red); border: 1px solid var(--red-line); }
+  .status-worth { background: transparent; border: 1px solid var(--line); color: #5F697B; }
+  .status-archive { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+  .status-default { background: transparent; border: 1px solid var(--line); color: #5F697B; }
+
+  tbody tr.row.is-archived { opacity: 0.5; }
+  tbody tr.row.is-archived:hover { opacity: 0.75; }
+
+  .col-source {
+    font-size: 12px;
+    color: var(--text-meta);
+    white-space: nowrap;
+  }
+  .col-region {
+    font-size: 10.5px;
+    color: var(--muted);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .col-views {
+    font-variant-numeric: tabular-nums;
+    font-size: 12.5px;
+    color: var(--text-meta);
+    white-space: nowrap;
+    text-align: right;
+  }
+  .hot-badge {
+    font-size: 11px;
+  }
+
+  .detail-row td {
+    padding: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .detail-panel {
+    background: var(--paper);
+    padding: 18px 22px;
+    border-left: 2px solid var(--navy);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 32px;
+  }
+  .detail-block .h {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .detail-block .v {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .detail-full {
+    grid-column: 1 / -1;
+  }
+  .detail-link {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 7px 14px;
+    background: var(--ink);
+    color: var(--paper-raised);
+    text-decoration: none;
+    font-size: 12px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .detail-link:hover { background: var(--text-input); }
+
+  .feedback-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .fb-q {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .fb-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    border-radius: 4px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.12s ease, background 0.12s ease;
+  }
+  .fb-btn:hover:not(:disabled) {
+    border-color: var(--teal);
+    background: var(--teal-soft);
+  }
+  .fb-btn:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+  .fb-btn.voted {
+    background: var(--teal-soft);
+    border-color: var(--teal);
+    color: var(--teal);
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .fb-btn.voted:hover {
+    background: var(--red-soft);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .fb-btn.voted:hover .fb-count { color: var(--red); border-left-color: var(--red); }
+  @media (hover: hover) {
+    .fb-btn.voted:hover .fb-text { font-size: 0; }
+    .fb-btn.voted:hover .fb-text::after { content: '추천 취소'; font-size: 12px; }
+  }
+  .fb-thumb { font-size: 13px; line-height: 1; }
+  .fb-count {
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+    padding-left: 7px;
+    border-left: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .fb-btn.voted .fb-count { color: var(--teal); border-left-color: var(--teal); }
+
+  .save-btn { margin-left: auto; }
+
+  .related-block .h { margin-bottom: 8px; }
+  .related-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .related-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper-raised);
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--font-sans);
+  }
+  .related-item:hover { border-color: var(--navy); background: var(--navy-soft); }
+  .related-item:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+  .related-title { font-size: 12.5px; color: var(--ink); font-weight: 500; }
+  .related-meta { font-size: 11px; color: var(--muted); }
+
+  tbody tr.row.flash-highlight { animation: flashRow 1.5s ease; }
+  @keyframes flashRow {
+    0% { background: var(--navy-soft); }
+    100% { background: transparent; }
+  }
+
+  .wp-row[data-goto-title] { cursor: pointer; }
+  .wp-row[data-goto-title]:hover .wp-title { color: var(--navy); text-decoration: underline; }
+  .wp-row[data-goto-title]:focus-visible { outline: 2px solid var(--navy); outline-offset: 1px; }
+
+  /* ---------- States ---------- */
+  .state-box {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .state-box .big {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .state-box code {
+    background: var(--paper);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid var(--line);
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-hint { margin-top: 4px; font-size: 12.5px; }
+
+  @media (max-width: 900px) {
+    /* 태블릿: 표를 화면 폭에 맞춰 가로 스크롤 없이 표시 */
+    table { min-width: 0; }
+    .col-title, .col-summary { max-width: none; }
+    .col-source { white-space: normal; }
+    /* 카테고리는 위쪽 카테고리 메뉴로 확인할 수 있어, 좁은 화면에서는 열을 숨기고 제목·요약에 폭을 양보 */
+    thead th:nth-child(2), tbody td:nth-child(2) { display: none; }
+  }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 20px 14px 60px; }
+    .masthead h1 { font-size: 28px; }
+    .masthead-meta { text-align: left; }
+    .stats-row { flex-wrap: wrap; }
+    .stat { flex: 1 1 50%; border-bottom: 1px solid var(--line); }
+    .search-box { flex: 1 1 100%; }
+    .filters { gap: 8px; }
+    .filters select { flex: 1 1 130px; }
+    .toggle-chip, .refresh-btn { flex: 0 0 auto; }
+    .date-range-inputs { flex: 1 1 100%; }
+    .date-input { flex: 1 1 auto; min-width: 0; }
+
+    .category-menu { gap: 16px; padding-right: 16px; }
+
+    /* 표: 우선순위가 낮은 '카테고리'/'출처' 열을 숨겨 가로 스크롤 폭을 줄임 (등록일 열이 빠져 인덱스가 한 칸씩 당겨짐) */
+    table { min-width: 0; }
+    thead th:nth-child(2), tbody td:nth-child(2),
+    thead th:nth-child(3), tbody td:nth-child(3) {
+      display: none;
+    }
+
+    .col-title { max-width: 240px; }
+    .col-summary { max-width: 220px; }
+
+    .detail-panel {
+      grid-template-columns: 1fr;
+      padding: 16px 18px;
+      gap: 14px;
+    }
+  }
+
+  @media (max-width: 420px) {
+    /* 더 좁은 화면에서는 조회수 열도 숨기고 핵심 정보만 남김 */
+    table { min-width: 0; } /* 4개 열만 남으므로 화면 폭에 맞춤 (가로 스크롤 없음) */
+    thead th:nth-child(6), tbody td:nth-child(6) {
+      display: none;
+    }
+    .col-title { max-width: none; }
+    .col-summary { max-width: none; }
+  }
+
+  @media (max-width: 360px) {
+    tbody td, thead th { padding-left: 6px; padding-right: 6px; }
+    .status-badge { padding: 4px 7px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <h1><span class="echo-mark">ECHO</span>Knowledge Hub</h1>
+      <div class="sub">외부 아티클 아카이브 · 에코마케팅 큐레이션</div>
+    </div>
+    <div class="masthead-meta" id="masthead-meta">
+      <div class="edition">SYNCED SNAPSHOT</div>
+      <div id="last-updated">불러오는 중…</div>
+      <div class="popular-panels">
+        <div class="weekly-popular" id="weekly-popular">
+          <div class="wp-label">🔥 실시간 인기 아티클</div>
+          <div id="weekly-popular-list"></div>
+          <div class="wp-hint">조회수가 쌓이면 자동으로 갱신돼요</div>
+        </div>
+        <div class="weekly-popular" id="recommended-popular">
+          <div class="wp-label">👍 추천이 많은 아티클</div>
+          <div id="recommended-popular-list"></div>
+          <div class="wp-hint">'도움이 됐어요' 수 기준이에요</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-row" id="stats-row" style="display:none;">
+    <div class="stat"><div class="num" id="stat-total">–</div><div class="lbl">전체 아티클</div></div>
+    <div class="stat"><div class="num" id="stat-mustread">–</div><div class="lbl">Must Read</div></div>
+    <div class="stat"><div class="num" id="stat-categories">–</div><div class="lbl">카테고리</div></div>
+    <div class="stat"><div class="num" id="stat-latest">–</div><div class="lbl">최신 등록일</div></div>
+  </div>
+
+  <div class="category-menu" id="category-nav"></div>
+
+  <div class="filters" id="filters" style="display:none;">
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="제목, 요약, 태그 검색">
+    </div>
+    <select id="filter-category"><option value="">전체 카테고리</option></select>
+    <select id="filter-importance"><option value="">전체 중요도</option></select>
+    <select id="filter-status">
+      <option value="">전체 상태</option>
+      <option value="Must Read">Must Read</option>
+      <option value="읽어볼 만함">읽어볼 만함</option>
+      <option value="아카이브">아카이브</option>
+    </select>
+    <select id="filter-period">
+      <option value="all">전체 기간</option>
+      <option value="7d">최근 7일</option>
+      <option value="30d">최근 30일</option>
+      <option value="custom">날짜 직접 선택</option>
+    </select>
+    <span class="date-range-inputs" id="date-range-inputs" style="display:none;">
+      <input type="date" id="filter-date-start" class="date-input" aria-label="시작일">
+      <span class="date-sep">~</span>
+      <input type="date" id="filter-date-end" class="date-input" aria-label="종료일">
+    </span>
+    <select id="sort-select" aria-label="정렬 기준">
+      <option value="latest">최신순</option>
+      <option value="views">조회순</option>
+      <option value="helpful">추천순</option>
+      <option value="importance">중요도순</option>
+    </select>
+    <div class="toggle-chip" id="mustread-toggle">🔥 Must Read만</div>
+    <div class="toggle-chip neutral" id="saved-toggle">🔖 저장한 아티클만</div>
+    <button class="refresh-btn" id="refresh-btn">필터 초기화</button>
+  </div>
+
+  <div class="active-filters" id="active-filters"></div>
+
+  <div id="content-area"></div>
+
+  <footer class="site-footer">
+    <p class="footer-text">추천하고 싶은 아티클이나 허브에 대한 의견이 있으신가요?</p>
+    <a class="feedback-link" href="https://forms.gle/Xh3M767Zp8hqFMTT9" target="_blank" rel="noopener noreferrer">
+      의견 남기러 가기 <span aria-hidden="true">↗</span>
+    </a>
+  </footer>
+
+</div>
+
+<script>
+const LAST_SYNCED = '__LAST_SYNCED__';
+
+const ARTICLES = __ARTICLES_JSON__;
+
+const CATEGORY_META = {
+  'AI·테크':        { emoji: '🤖', desc: '생성형 AI, AI 에이전트, 검색, 자동화, 보안 등' },
+  '광고·마케팅':    { emoji: '📣', desc: '마케팅 전략, 광고 효과, 퍼포먼스 마케팅, 고객 경험' },
+  '플랫폼·미디어':  { emoji: '📱', desc: '매체 변화, 플랫폼 정책, 애드테크, 미디어 상품' },
+  '브랜드·비즈니스': { emoji: '🛍', desc: '브랜드 성장, 커머스, 기업 전략, 비즈니스 모델' },
+  '인재·조직':      { emoji: '👥', desc: '채용, 새로운 직무, 인재상, 조직 운영, 업무 방식의 변화' },
+  '데이터·인사이트': { emoji: '📊', desc: '데이터 활용, 측정, 분석, 소비자·시장 인사이트' },
+};
+
+function renderCategoryNav() {
+  const nav = document.getElementById('category-nav');
+  const current = document.getElementById('filter-category').value;
+  const cats = Object.keys(CATEGORY_META);
+  const total = allRows.length;
+
+  const items = [
+    { key: '', label: '전체', count: total },
+    ...cats.map(cat => ({ key: cat, label: cat, count: allRows.filter(r => r.category === cat).length })),
+  ];
+
+  nav.innerHTML = `<span class="cat-menu-label">카테고리</span>` + items.map(it => {
+    const active = current === it.key;
+    return `<button class="cat-item ${active ? 'active' : ''}" data-cat="${escapeHtml(it.key)}">
+      <span class="cat-item-name">${escapeHtml(it.label)}</span>
+      <span class="cat-item-count">${it.count}</span>
+    </button>`;
+  }).join('');
+
+  nav.querySelectorAll('.cat-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.dataset.cat;
+      const sel = document.getElementById('filter-category');
+      sel.value = cat;
+      expandedId = null;
+      renderCategoryNav();
+      render();
+    });
+  });
+}
+
+let allRows = [];
+let sortState = { col: 'date', dir: 'desc' };
+let expandedId = null;
+let viewCounts = {};
+let helpfulCounts = {};
+let savedIds = new Set();
+let savedOnly = false;
+let dateFilter = { mode: 'all', start: '', end: '' };
+let flashRowId = null;
+
+function loadSavedIds() {
+  try {
+    const raw = localStorage.getItem('kh_saved_articles');
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function persistSavedIds() {
+  try {
+    localStorage.setItem('kh_saved_articles', JSON.stringify([...savedIds]));
+  } catch (e) { /* 저장 불가 환경이면 무시 */ }
+}
+
+function toggleSaved(articleId) {
+  if (savedIds.has(articleId)) savedIds.delete(articleId);
+  else savedIds.add(articleId);
+  persistSavedIds();
+  render();
+}
+
+const COUNTAPI_BASE = 'https://countapi.mileshilliard.com/api/v1';
+const COUNTAPI_PREFIX = 'echomkt-knowledgehub-';
+const HELPFUL_PREFIX = 'echomkt-khhelpful-';
+// 이 CountAPI는 감소(-1)를 지원하지 않고, set(덮어쓰기)은 동시 클릭 시 다른 사람의 추천을 지울 수 있다.
+// 그래서 '추천'과 '취소'를 각각 증가 전용 카운터(hit)로 기록하고, 화면에는 (추천 - 취소)를 보여준다.
+const HELPFUL_CANCEL_PREFIX = 'echomkt-khhelpful-cancel-';
+let helpfulRaw = {}; // { [articleId]: { plus, minus } }
+
+function hashId(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) | 0; }
+  return 'a' + Math.abs(h).toString(36);
+}
+
+function hasVoted(articleId) {
+  try {
+    return localStorage.getItem('kh_voted_' + articleId) === '1';
+  } catch (e) {
+    return false;
+  }
+}
+
+function markVoted(articleId) {
+  try {
+    localStorage.setItem('kh_voted_' + articleId, '1');
+  } catch (e) { /* 저장 불가 환경이면 무시 */ }
+}
+
+function unmarkVoted(articleId) {
+  try {
+    localStorage.removeItem('kh_voted_' + articleId);
+  } catch (e) { /* 저장 불가 환경이면 무시 */ }
+}
+
+async function countapiGet(prefix, id) {
+  try {
+    const res = await fetch(`${COUNTAPI_BASE}/get/${prefix}${id}`);
+    if (!res.ok) return 0;
+    const data = await res.json();
+    return parseInt(data.value, 10) || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+async function loadViewCounts() {
+  const results = await Promise.all(ARTICLES.map(async (r) => {
+    const id = hashId(r.title);
+    return [id, await countapiGet(COUNTAPI_PREFIX, id)];
+  }));
+  viewCounts = Object.fromEntries(results);
+}
+
+async function loadHelpfulCounts() {
+  const results = await Promise.all(ARTICLES.map(async (r) => {
+    const id = hashId(r.title);
+    const [plus, minus] = await Promise.all([
+      countapiGet(HELPFUL_PREFIX, id),
+      countapiGet(HELPFUL_CANCEL_PREFIX, id),
+    ]);
+    return [id, { plus, minus }];
+  }));
+  helpfulRaw = Object.fromEntries(results);
+  helpfulCounts = {};
+  Object.keys(helpfulRaw).forEach(id => { helpfulCounts[id] = netHelpful(id); });
+}
+
+// 순 추천 수 = 추천 - 취소 (0 미만으로 내려가지 않음)
+function netHelpful(articleId) {
+  const raw = helpfulRaw[articleId] || { plus: 0, minus: 0 };
+  return Math.max(0, raw.plus - raw.minus);
+}
+
+// hit 요청: 성공하면 서버의 최신 값을, 실패하면 null을 돌려준다
+async function countapiHit(prefix, id) {
+  try {
+    const res = await fetch(`${COUNTAPI_BASE}/hit/${prefix}${id}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const v = parseInt(data.value, 10);
+    return isNaN(v) ? null : v;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function recordView(articleId) {
+  try {
+    const res = await fetch(`${COUNTAPI_BASE}/hit/${COUNTAPI_PREFIX}${articleId}`);
+    if (res.ok) {
+      const data = await res.json();
+      viewCounts[articleId] = parseInt(data.value, 10) || 0;
+    }
+  } catch (e) {
+    console.error('조회수 기록 실패', e);
+  }
+  render();
+}
+
+const helpfulPending = new Set();
+
+async function recordHelpful(articleId) {
+  // 서버 응답 전 연타하면 증가/감소가 꼬일 수 있어, 처리 중에는 추가 클릭을 무시
+  if (helpfulPending.has(articleId)) return;
+  helpfulPending.add(articleId);
+  try {
+    await toggleHelpful(articleId);
+  } finally {
+    helpfulPending.delete(articleId);
+  }
+}
+
+async function toggleHelpful(articleId) {
+  const raw = helpfulRaw[articleId] || (helpfulRaw[articleId] = { plus: 0, minus: 0 });
+  const cancelling = hasVoted(articleId);
+  const field = cancelling ? 'minus' : 'plus';
+  const prefix = cancelling ? HELPFUL_CANCEL_PREFIX : HELPFUL_PREFIX;
+
+  // 1) 화면 먼저 반영 (버튼 상태·숫자·상단 순위·추천순 정렬)
+  if (cancelling) unmarkVoted(articleId); else markVoted(articleId);
+  raw[field] += 1;
+  helpfulCounts[articleId] = netHelpful(articleId);
+  render();
+
+  // 2) 서버에 기록 (증가 전용이라 동시에 눌러도 값이 유실되지 않음)
+  const serverValue = await countapiHit(prefix, articleId);
+  if (serverValue === null) {
+    // 저장 실패 → 화면과 내 기록을 원래대로 되돌림 (숫자만 바뀐 채로 두지 않음)
+    raw[field] -= 1;
+    if (cancelling) markVoted(articleId); else unmarkVoted(articleId);
+    helpfulCounts[articleId] = netHelpful(articleId);
+    render();
+    showToast('저장에 실패했어요. 잠시 후 다시 눌러주세요.');
+    return;
+  }
+  // 서버의 최신 값으로 맞춤 (그사이 다른 사람이 누른 것도 반영)
+  raw[field] = serverValue;
+  helpfulCounts[articleId] = netHelpful(articleId);
+  render();
+}
+
+function showToast(msg) {
+  let el = document.getElementById('kh-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'kh-toast';
+    el.setAttribute('role', 'status');
+    el.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#182033;color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;z-index:1000;box-shadow:0 4px 14px rgba(0,0,0,.18);transition:opacity .2s;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 2600);
+}
+
+function populateFilterOptions(rows) {
+  const catSel = document.getElementById('filter-category');
+  const impSel = document.getElementById('filter-importance');
+
+  const cats = [...new Set(rows.map(r => r.category).filter(Boolean))].sort();
+  const imps = [...new Set(rows.map(r => r.importance).filter(Boolean))].sort((a,b) => b.length - a.length);
+
+  catSel.innerHTML = '<option value="">전체 카테고리</option>' + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  impSel.innerHTML = '<option value="">전체 중요도</option>' + imps.map(i => `<option value="${escapeHtml(i)}">${escapeHtml(i)} (${i.length})</option>`).join('');
+
+  // 상태 목록은 시트에 실제로 입력된 값으로 만든다 (자주 쓰는 순서를 앞에 배치)
+  const statSel = document.getElementById('filter-status');
+  const STATUS_ORDER = ['Must Read', '읽어볼 만함', '추천', '참고', '아카이브'];
+  const stats = [...new Set(rows.map(r => r.status).filter(Boolean))].sort((a, b) => {
+    const ai = STATUS_ORDER.indexOf(a), bi = STATUS_ORDER.indexOf(b);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi) || a.localeCompare(b);
+  });
+  statSel.innerHTML = '<option value="">전체 상태</option>' + stats.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+}
+
+function updateStats(rows) {
+  document.getElementById('stat-total').textContent = rows.length;
+  document.getElementById('stat-mustread').textContent = rows.filter(r => r.status.includes('Must')).length;
+  document.getElementById('stat-categories').textContent = new Set(rows.map(r => r.category).filter(Boolean)).size;
+  const dates = rows.map(r => r.date).filter(Boolean).sort();
+  document.getElementById('stat-latest').textContent = dates.length ? dates[dates.length - 1] : '–';
+  document.getElementById('stats-row').style.display = 'flex';
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function getFiltered() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const cat = document.getElementById('filter-category').value;
+  const imp = document.getElementById('filter-importance').value;
+  const stat = document.getElementById('filter-status').value;
+  const mustOnly = document.getElementById('mustread-toggle').classList.contains('active');
+
+  let rows = allRows.filter(r => {
+    if (cat && r.category !== cat) return false;
+    if (imp && r.importance !== imp) return false;
+    if (stat && r.status !== stat) return false;
+    if (mustOnly && !r.status.includes('Must')) return false;
+    if (savedOnly && !savedIds.has(hashId(r.title))) return false;
+    if (!inDateRange(r.date)) return false;
+    if (q) {
+      const hay = (r.title + ' ' + r.summary + ' ' + r.tag + ' ' + r.source).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    let av, bv;
+    if (sortState.col === 'date') { av = a.date; bv = b.date; }
+    else if (sortState.col === 'importance') { av = a.importance.length; bv = b.importance.length; }
+    else if (sortState.col === 'views') { av = viewCounts[hashId(a.title)] || 0; bv = viewCounts[hashId(b.title)] || 0; }
+    else if (sortState.col === 'helpful') { av = helpfulCounts[hashId(a.title)] || 0; bv = helpfulCounts[hashId(b.title)] || 0; }
+    else { av = a[sortState.col] || ''; bv = b[sortState.col] || ''; }
+    if (av < bv) return sortState.dir === 'asc' ? -1 : 1;
+    if (av > bv) return sortState.dir === 'asc' ? 1 : -1;
+    if (sortState.col !== 'date') {
+      if (a.date < b.date) return 1;
+      if (a.date > b.date) return -1;
+    }
+    return 0;
+  });
+
+  return rows;
+}
+
+// 'YYYY-MM-DD'(또는 YYYY.MM.DD / YYYY/MM/DD)를 브라우저 현지 자정 기준 날짜로 변환
+function parseLocalDate(str) {
+  const m = String(str || '').trim().match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return new Date(str);
+}
+
+function inDateRange(dateStr) {
+  if (dateFilter.mode === 'all') return true;
+  if (!dateStr) return false;
+  const d = parseLocalDate(dateStr);
+  if (isNaN(d.getTime())) return true;
+  if (dateFilter.mode === '7d' || dateFilter.mode === '30d') {
+    // '오늘 포함' 최근 N일 → 오늘로부터 (N-1)일 전까지 포함
+    const offsetDays = dateFilter.mode === '7d' ? 6 : 29;
+    // 사용자 기기의 현재 날짜 기준: 시작일(오늘-N+1일) 00:00 ~ 오늘 자정 전까지
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(today);
+    start.setDate(start.getDate() - offsetDays);
+    return d >= start && d <= today;
+  }
+  if (dateFilter.mode === 'custom') {
+    if (dateFilter.start && d < parseLocalDate(dateFilter.start)) return false;
+    if (dateFilter.end && d > parseLocalDate(dateFilter.end)) return false;
+    return true;
+  }
+  return true;
+}
+
+function tagTokens(tagStr) {
+  return String(tagStr || '').split(/[\/,、]+/).map(t => t.trim()).filter(Boolean);
+}
+
+function findRelated(article, all) {
+  const myTags = new Set(tagTokens(article.tag));
+  if (myTags.size === 0) return [];
+  return all
+    .filter(r => r.title !== article.title)
+    .map(r => {
+      const overlapTags = tagTokens(r.tag).filter(t => myTags.has(t));
+      return { article: r, overlapCount: overlapTags.length, overlapTags };
+    })
+    .filter(x => x.overlapCount > 0)
+    .sort((a, b) => {
+      if (b.overlapCount !== a.overlapCount) return b.overlapCount - a.overlapCount;
+      if (b.article.importance.length !== a.article.importance.length) return b.article.importance.length - a.article.importance.length;
+      return a.article.date < b.article.date ? 1 : -1;
+    })
+    .slice(0, 3);
+}
+
+function resetAllFilters() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('filter-category').value = '';
+  document.getElementById('filter-importance').value = '';
+  document.getElementById('filter-status').value = '';
+  document.getElementById('mustread-toggle').classList.remove('active');
+  document.getElementById('saved-toggle').classList.remove('active');
+  savedOnly = false;
+  document.getElementById('filter-period').value = 'all';
+  document.getElementById('filter-date-start').value = '';
+  document.getElementById('filter-date-end').value = '';
+  document.getElementById('date-range-inputs').style.display = 'none';
+  dateFilter = { mode: 'all', start: '', end: '' };
+}
+
+function goToArticle(title) {
+  const articleId = hashId(title);
+  const visible = getFiltered().some(r => hashId(r.title) === articleId);
+  if (!visible) {
+    resetAllFilters();
+    renderCategoryNav();
+  }
+  const rows = getFiltered();
+  const idx = rows.findIndex(r => hashId(r.title) === articleId);
+  if (idx === -1) return;
+  expandedId = articleId;
+  flashRowId = articleId;
+  render();
+  recordView(articleId);
+  requestAnimationFrame(() => {
+    const tr = document.querySelector(`tr.row[data-article-id="${articleId}"]`);
+    if (tr) tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  setTimeout(() => { flashRowId = null; }, 1600);
+}
+
+function statusClass(status) {
+  if (status.includes('Must')) return 'status-must';
+  if (status.includes('아카이브')) return 'status-archive';
+  if (status.includes('읽어') || status.includes('추천')) return 'status-worth';
+  return 'status-default';
+}
+
+function renderWeeklyPopular() {
+  const list = document.getElementById('weekly-popular-list');
+  if (!list) return;
+  const ranked = allRows
+    .map(r => ({ title: r.title, views: viewCounts[hashId(r.title)] || 0 }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 3);
+
+  if (ranked.length === 0 || ranked.every(r => r.views === 0)) {
+    list.innerHTML = `<div class="wp-empty">아직 조회 데이터가 없어요</div>`;
+    return;
+  }
+
+  list.innerHTML = ranked.map((r, i) => `<div class="wp-row" data-goto-title="${escapeHtml(r.title)}" tabindex="0" role="button">
+    <span class="wp-rank">${i + 1}</span>
+    <span class="wp-title">${escapeHtml(r.title)}</span>
+    <span class="wp-views">${r.views}회</span>
+  </div>`).join('');
+  bindGotoHandlers(list);
+}
+
+function renderRecommendedPopular() {
+  const list = document.getElementById('recommended-popular-list');
+  if (!list) return;
+  const ranked = allRows
+    .map(r => ({ title: r.title, helpful: helpfulCounts[hashId(r.title)] || 0 }))
+    .sort((a, b) => b.helpful - a.helpful)
+    .slice(0, 3);
+
+  if (ranked.length === 0 || ranked.every(r => r.helpful === 0)) {
+    list.innerHTML = `<div class="wp-empty">아직 추천 데이터가 없어요</div>`;
+    return;
+  }
+
+  list.innerHTML = ranked.map((r, i) => `<div class="wp-row" data-goto-title="${escapeHtml(r.title)}" tabindex="0" role="button">
+    <span class="wp-rank">${i + 1}</span>
+    <span class="wp-title">${escapeHtml(r.title)}</span>
+    <span class="wp-views">${r.helpful}👍</span>
+  </div>`).join('');
+  bindGotoHandlers(list);
+}
+
+function bindGotoHandlers(container) {
+  container.querySelectorAll('[data-goto-title]').forEach(el => {
+    el.addEventListener('click', () => goToArticle(el.dataset.gotoTitle));
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToArticle(el.dataset.gotoTitle); }
+    });
+  });
+}
+
+function renderActiveFilters() {
+  const wrap = document.getElementById('active-filters');
+  if (!wrap) return;
+  const chips = [];
+  const cat = document.getElementById('filter-category').value;
+  const imp = document.getElementById('filter-importance').value;
+  const stat = document.getElementById('filter-status').value;
+  const q = document.getElementById('search-input').value.trim();
+  const mustOnly = document.getElementById('mustread-toggle').classList.contains('active');
+
+  if (cat) chips.push({ key: 'category', label: cat });
+  if (imp) chips.push({ key: 'importance', label: imp });
+  if (stat) chips.push({ key: 'status', label: stat });
+  if (mustOnly) chips.push({ key: 'mustread', label: 'Must Read' });
+  if (dateFilter.mode !== 'all') {
+    let label = dateFilter.mode === '7d' ? '최근 7일' : dateFilter.mode === '30d' ? '최근 30일' : `${dateFilter.start || '시작일'} ~ ${dateFilter.end || '종료일'}`;
+    chips.push({ key: 'period', label });
+  }
+  if (savedOnly) chips.push({ key: 'saved', label: '저장한 아티클' });
+  if (q) chips.push({ key: 'search', label: `"${q}"` });
+
+  if (chips.length === 0) {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.style.display = 'flex';
+  wrap.innerHTML = chips.map(c => `<span class="filter-chip">${escapeHtml(c.label)}<button class="chip-x" data-chip-key="${c.key}" aria-label="${escapeHtml(c.label)} 필터 해제">×</button></span>`).join('');
+
+  wrap.querySelectorAll('.chip-x').forEach(btn => {
+    btn.addEventListener('click', () => clearChip(btn.dataset.chipKey));
+  });
+}
+
+function clearChip(key) {
+  if (key === 'category') document.getElementById('filter-category').value = '';
+  if (key === 'importance') document.getElementById('filter-importance').value = '';
+  if (key === 'status') document.getElementById('filter-status').value = '';
+  if (key === 'mustread') document.getElementById('mustread-toggle').classList.remove('active');
+  if (key === 'saved') { savedOnly = false; document.getElementById('saved-toggle').classList.remove('active'); }
+  if (key === 'search') document.getElementById('search-input').value = '';
+  if (key === 'period') {
+    dateFilter = { mode: 'all', start: '', end: '' };
+    document.getElementById('filter-period').value = 'all';
+    document.getElementById('filter-date-start').value = '';
+    document.getElementById('filter-date-end').value = '';
+    document.getElementById('date-range-inputs').style.display = 'none';
+  }
+  expandedId = null;
+  renderCategoryNav();
+  render();
+}
+
+function render() {
+  renderWeeklyPopular();
+  renderRecommendedPopular();
+  renderActiveFilters();
+  const rows = getFiltered();
+  const area = document.getElementById('content-area');
+
+  if (allRows.length === 0) {
+    area.innerHTML = `<div class="state-box">
+      <div class="big">아직 등록된 아티클이 없습니다</div>
+      <div class="empty-hint">시트의 '아티클 DB' 탭에 새 행을 추가하면 여기에 바로 나타나요.</div>
+    </div>`;
+    return;
+  }
+
+  if (rows.length === 0) {
+    if (savedOnly) {
+      area.innerHTML = `<div class="state-box">
+        <div class="big">저장한 아티클이 없습니다.</div>
+      </div>`;
+    } else {
+      area.innerHTML = `<div class="state-box">
+        <div class="big">조건에 맞는 아티클이 없습니다</div>
+        <div class="empty-hint">필터나 검색어를 조정해보세요.</div>
+      </div>`;
+    }
+    return;
+  }
+
+  const arrow = (col) => sortState.col === col ? `<span class="arrow">${sortState.dir === 'asc' ? '▲' : '▼'}</span>` : '';
+
+  let html = `<div class="table-scroll"><table>
+    <thead><tr>
+      <th data-sort="importance">중요도 ${arrow('importance')}</th>
+      <th data-sort="category">카테고리 ${arrow('category')}</th>
+      <th data-sort="source">출처</th>
+      <th>제목</th>
+      <th>핵심 요약</th>
+      <th data-sort="views">조회수 ${arrow('views')}</th>
+      <th data-sort="status">상태 ${arrow('status')}</th>
+    </tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    const articleId = hashId(r.title);
+    const isOpen = expandedId === articleId;
+    const views = viewCounts[articleId] || 0;
+    const isHot = views >= 3;
+    const flashClass = articleId === flashRowId ? 'flash-highlight' : '';
+    html += `<tr class="row ${isOpen ? 'expanded' : ''} ${r.status.includes('아카이브') ? 'is-archived' : ''} ${flashClass}" data-idx="${i}" data-article-id="${articleId}">
+      <td><span class="stars">${escapeHtml(r.importance)}</span></td>
+      <td><span class="tag">${escapeHtml(r.category)}</span></td>
+      <td class="col-source">${escapeHtml(r.source)}<span class="col-region">${escapeHtml(r.region)}</span></td>
+      <td class="col-title"><div class="headline">${escapeHtml(r.title)}</div><div class="subtag">${escapeHtml(r.tag)}</div></td>
+      <td class="col-summary">${escapeHtml(r.summary)}</td>
+      <td class="col-views">${views}${isHot ? ' <span class="hot-badge">🔥</span>' : ''}</td>
+      <td><span class="status-badge ${statusClass(r.status)}">${escapeHtml(r.status)}</span></td>
+    </tr>`;
+
+    if (isOpen) {
+      const helpful = helpfulCounts[articleId] || 0;
+      const voted = hasVoted(articleId);
+      const saved = savedIds.has(articleId);
+      const related = findRelated(r, allRows);
+      html += `<tr class="detail-row"><td colspan="7"><div class="detail-panel">
+        <div class="detail-block"><div class="h">WHY IT MATTERS / 에코 시사점</div><div class="v">${escapeHtml(r.why) || '—'}</div></div>
+        <div class="detail-block"><div class="h">추천 대상 · 열람 구분</div><div class="v">${escapeHtml(r.audience) || '—'} · ${escapeHtml(r.access) || '—'}</div></div>
+        <div class="detail-block detail-full">
+          ${r.link ? `<a class="detail-link" href="${escapeHtml(r.link)}" target="_blank" rel="noopener">원문 보기 ↗</a>` : ''}
+        </div>
+        ${related.length > 0 ? `
+        <div class="detail-block detail-full related-block">
+          <div class="h">함께 보면 좋은 아티클</div>
+          <div class="related-list">
+            ${related.map(x => `<button class="related-item" data-goto-title="${escapeHtml(x.article.title)}">
+              <span class="related-title">${escapeHtml(x.article.title)}</span>
+              <span class="related-meta">${escapeHtml(x.article.category)} · ${x.overlapTags.map(t => escapeHtml(t)).join(', ')}</span>
+            </button>`).join('')}
+          </div>
+        </div>` : ''}
+        <div class="detail-block detail-full feedback-bar">
+          <span class="fb-q">이 아티클, 도움이 되셨나요?</span>
+          <button class="fb-btn ${voted ? 'voted' : ''}" data-helpful-id="${articleId}" aria-pressed="${voted ? 'true' : 'false'}" title="${voted ? '다시 누르면 추천이 취소돼요' : '이 아티클을 추천해요'}">
+            <span class="fb-thumb">👍</span>
+            <span class="fb-text">${voted ? '추천했어요 ✓' : '도움이 됐어요'}</span>
+            <span class="fb-count">${helpful}</span>
+          </button>
+          <button class="fb-btn save-btn ${saved ? 'voted' : ''}" data-save-id="${articleId}">
+            <span class="fb-thumb">🔖</span>
+            <span class="fb-text">${saved ? '저장됨' : '저장'}</span>
+          </button>
+        </div>
+      </div></td></tr>`;
+    }
+  });
+
+  html += `</tbody></table></div>`;
+  area.innerHTML = html;
+
+  area.querySelectorAll('tr.row').forEach(tr => {
+    tr.addEventListener('click', () => {
+      // 펼침 상태는 '몇 번째 줄'이 아니라 '어떤 아티클'로 기억 → 조회·추천으로 순서가 바뀌어도 유지
+      const articleId = tr.dataset.articleId;
+      const opening = expandedId !== articleId;
+      expandedId = opening ? articleId : null;
+      render();
+      if (opening && articleId) recordView(articleId);
+    });
+  });
+
+  area.querySelectorAll('[data-helpful-id]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      recordHelpful(btn.dataset.helpfulId);
+    });
+  });
+
+  area.querySelectorAll('[data-save-id]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSaved(btn.dataset.saveId);
+    });
+  });
+
+  area.querySelectorAll('.related-item[data-goto-title]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      goToArticle(btn.dataset.gotoTitle);
+    });
+  });
+
+  document.querySelectorAll('thead th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (sortState.col === col) sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+      else { sortState.col = col; sortState.dir = 'desc'; }
+      expandedId = null;
+      render();
+    });
+  });
+}
+
+async function init() {
+  allRows = ARTICLES;
+  savedIds = loadSavedIds();
+  populateFilterOptions(allRows);
+  updateStats(allRows);
+  document.getElementById('filters').style.display = 'flex';
+  document.getElementById('last-updated').textContent = LAST_SYNCED + ' 동기화';
+  expandedId = null;
+  await Promise.all([loadViewCounts(), loadHelpfulCounts()]);
+  renderCategoryNav();
+  render();
+}
+
+document.getElementById('search-input').addEventListener('input', () => { expandedId = null; render(); });
+document.getElementById('filter-category').addEventListener('change', () => { expandedId = null; renderCategoryNav(); render(); });
+document.getElementById('filter-importance').addEventListener('change', () => { expandedId = null; render(); });
+document.getElementById('filter-status').addEventListener('change', () => { expandedId = null; render(); });
+document.getElementById('filter-period').addEventListener('change', (e) => {
+  dateFilter.mode = e.target.value;
+  document.getElementById('date-range-inputs').style.display = dateFilter.mode === 'custom' ? 'inline-flex' : 'none';
+  expandedId = null;
+  render();
+});
+document.getElementById('filter-date-start').addEventListener('change', (e) => {
+  dateFilter.start = e.target.value;
+  expandedId = null;
+  render();
+});
+document.getElementById('filter-date-end').addEventListener('change', (e) => {
+  dateFilter.end = e.target.value;
+  expandedId = null;
+  render();
+});
+document.getElementById('sort-select').addEventListener('change', (e) => {
+  const map = { latest: 'date', views: 'views', helpful: 'helpful', importance: 'importance' };
+  sortState.col = map[e.target.value] || 'date';
+  sortState.dir = 'desc';
+  expandedId = null;
+  render();
+});
+document.getElementById('mustread-toggle').addEventListener('click', (e) => {
+  e.currentTarget.classList.toggle('active');
+  expandedId = null;
+  render();
+});
+document.getElementById('saved-toggle').addEventListener('click', (e) => {
+  savedOnly = !savedOnly;
+  e.currentTarget.classList.toggle('active', savedOnly);
+  expandedId = null;
+  render();
+});
+document.getElementById('refresh-btn').addEventListener('click', () => {
+  resetAllFilters();
+  document.getElementById('sort-select').value = 'latest';
+  sortState = { col: 'date', dir: 'desc' };
+  expandedId = null;
+  renderCategoryNav();
+  render();
+});
+
+init();
+</script>
+
+</body>
+</html>

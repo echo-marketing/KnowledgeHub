@@ -151,6 +151,19 @@
     font-weight: 500;
   }
 
+  .visit-counter {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    color: var(--ink-soft);
+  }
+  .visit-counter b {
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .visit-counter .vc-sep { color: var(--muted); }
+
   .popular-panels {
     display: flex;
     gap: 8px;
@@ -792,6 +805,9 @@
     <div class="masthead-meta" id="masthead-meta">
       <div class="edition">SYNCED SNAPSHOT</div>
       <div id="last-updated">불러오는 중…</div>
+      <div class="visit-counter" id="visit-counter" aria-live="polite">
+        <span>오늘 방문 <b id="visit-today">–</b></span><span class="vc-sep" aria-hidden="true">·</span><span>누적 방문 <b id="visit-total">–</b></span>
+      </div>
       <div class="popular-panels">
         <div class="weekly-popular" id="weekly-popular">
           <div class="wp-label">🔥 실시간 인기 아티클</div>
@@ -864,7 +880,7 @@
 </div>
 
 <script>
-const LAST_SYNCED = '2026-10-01 오후 6:10';
+const LAST_SYNCED = '2026-10-01 오후 6:13';
 
 const ARTICLES = [
   {
@@ -1647,6 +1663,48 @@ function toggleSaved(articleId) {
 }
 
 const COUNTAPI_BASE = 'https://countapi.mileshilliard.com/api/v1';
+
+// ---------- 방문자 카운터 ----------
+// 같은 브라우저는 하루(한국 시간 기준)에 한 번만 센다. 새로고침은 다시 세지 않음.
+const VISIT_PREFIX = 'echomkt-knowledgehub-visit-';
+const VISIT_DAY_KEY = 'kh_visit_day';
+
+function kstDateKey() {
+  // 보는 사람의 시간대와 무관하게 한국 시간 날짜(YYYYMMDD)
+  return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, '');
+}
+
+async function visitCount(op, key) {
+  try {
+    const res = await fetch(`${COUNTAPI_BASE}/${op}/${VISIT_PREFIX}${key}`);
+    if (res.status === 404) return 0; // 아직 아무도 방문하지 않은 날
+    if (!res.ok) return null;
+    const v = parseInt((await res.json()).value, 10);
+    return isNaN(v) ? null : v;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function loadVisitCounter() {
+  const day = kstDateKey();
+  let lastDay = null;
+  try { lastDay = localStorage.getItem(VISIT_DAY_KEY); } catch (e) {}
+  const firstVisitToday = lastDay !== day;
+  const op = firstVisitToday ? 'hit' : 'get';
+
+  const [today, total] = await Promise.all([
+    visitCount(op, 'day-' + day),
+    visitCount(op, 'total'),
+  ]);
+
+  if (firstVisitToday && today !== null && total !== null) {
+    try { localStorage.setItem(VISIT_DAY_KEY, day); } catch (e) {}
+  }
+  const fmt = (n) => (n === null ? '–' : n.toLocaleString('ko-KR'));
+  document.getElementById('visit-today').textContent = fmt(today);
+  document.getElementById('visit-total').textContent = fmt(total);
+}
 const COUNTAPI_PREFIX = 'echomkt-knowledgehub-';
 const HELPFUL_PREFIX = 'echomkt-khhelpful-';
 // 이 CountAPI는 감소(-1)를 지원하지 않고, set(덮어쓰기)은 동시 클릭 시 다른 사람의 추천을 지울 수 있다.
@@ -2223,6 +2281,7 @@ async function init() {
   document.getElementById('filters').style.display = 'flex';
   document.getElementById('last-updated').textContent = LAST_SYNCED + ' 동기화';
   expandedId = null;
+  loadVisitCounter(); // 표 표시를 기다리게 하지 않도록 따로 실행
   await Promise.all([loadViewCounts(), loadHelpfulCounts()]);
   renderCategoryNav();
   render();

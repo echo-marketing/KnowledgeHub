@@ -126,7 +126,7 @@
   }
 
   .echo-mark {
-    margin-right: 10px;
+    margin-right: 0; /* "EchoKnowledge Hub"로 붙여서 표시 */
   }
 
   .masthead .sub {
@@ -786,7 +786,7 @@
 
   <div class="masthead">
     <div>
-      <h1><span class="echo-mark">ECHO</span>Knowledge Hub</h1>
+      <h1><span class="echo-mark">Echo</span>Knowledge Hub</h1>
       <div class="sub">외부 아티클 아카이브 · 에코마케팅 큐레이션</div>
     </div>
     <div class="masthead-meta" id="masthead-meta">
@@ -864,7 +864,7 @@
 </div>
 
 <script>
-const LAST_SYNCED = '2026-10-01 오후 2:21';
+const LAST_SYNCED = '2026-10-01 오후 2:41';
 
 const ARTICLES = [
   {
@@ -2066,7 +2066,7 @@ function render() {
         <div class="detail-block"><div class="h">WHY IT MATTERS / 에코 시사점</div><div class="v">${escapeHtml(r.why) || '—'}</div></div>
         <div class="detail-block"><div class="h">추천 대상 · 열람 구분</div><div class="v">${escapeHtml(r.audience) || '—'} · ${escapeHtml(r.access) || '—'}</div></div>
         <div class="detail-block detail-full">
-          ${r.link ? `<a class="detail-link" href="${escapeHtml(r.link)}" target="_blank" rel="noopener">원문 보기 ↗</a>` : ''}
+          ${r.link ? `<a class="detail-link" href="${escapeHtml(r.link)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">원문 보기 ↗</a>` : ''}
         </div>
         ${related.length > 0 ? `
         <div class="detail-block detail-full related-block">

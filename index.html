@@ -520,6 +520,28 @@
     color: var(--muted);
     margin-top: 3px;
   }
+  /* 최신 5개 NEW 표시 */
+  .new-badge {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: var(--navy);
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    vertical-align: 2px;
+  }
+  /* 내가 읽은 아티클: 제목을 한 톤 낮추고 '읽음' 표시 */
+  tbody tr.row.is-read .col-title .headline { color: var(--ink-soft); font-weight: 500; }
+  .read-mark {
+    margin-left: 6px;
+    color: var(--navy);
+    font-weight: 600;
+    white-space: nowrap;
+  }
 
   .col-summary {
     max-width: 320px;
@@ -665,6 +687,8 @@
   }
   .fb-btn.voted .fb-count { color: var(--teal); border-left-color: var(--teal); }
 
+  .read-btn { margin-left: auto; }
+  .read-btn + .save-btn { margin-left: 0; }
   .save-btn { margin-left: auto; }
 
   .related-block .h { margin-bottom: 8px; }
@@ -855,8 +879,14 @@
       <span class="date-sep">~</span>
       <input type="date" id="filter-date-end" class="date-input" aria-label="종료일">
     </span>
+    <select id="filter-read" aria-label="읽음 상태">
+      <option value="">읽음 여부</option>
+      <option value="unread">안 읽은 아티클</option>
+      <option value="read">읽은 아티클</option>
+    </select>
     <select id="sort-select" aria-label="정렬 기준">
       <option value="latest">최신순</option>
+      <option value="oldest">오래된순</option>
       <option value="views">조회순</option>
       <option value="helpful">추천순</option>
       <option value="importance">중요도순</option>
@@ -880,7 +910,7 @@
 </div>
 
 <script>
-const LAST_SYNCED = '2026-10-02 오전 11:09';
+const LAST_SYNCED = '2026-10-02 오전 11:53';
 
 const ARTICLES = [
   {
@@ -1652,8 +1682,63 @@ let viewCounts = {};
 let helpfulCounts = {};
 let savedIds = new Set();
 let savedOnly = false;
+let readIds = new Set();   // 내가 읽은 아티클 (이 브라우저에만 저장)
+let readFilter = '';       // '' | 'unread' | 'read'
+let newIds = new Set();    // 최신 5개 (NEW 표시)
 let dateFilter = { mode: 'all', start: '', end: '' };
 let flashRowId = null;
+
+// ---------- 읽음 기록 (사용자별 · 브라우저 localStorage) ----------
+const READ_KEY = 'kh_read_articles';
+
+function loadReadIds() {
+  try {
+    const raw = localStorage.getItem(READ_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function persistReadIds() {
+  try {
+    localStorage.setItem(READ_KEY, JSON.stringify([...readIds]));
+  } catch (e) {}
+}
+
+function markRead(articleId) {
+  if (readIds.has(articleId)) return false;
+  readIds.add(articleId);
+  persistReadIds();
+  return true;
+}
+
+function toggleRead(articleId) {
+  if (readIds.has(articleId)) readIds.delete(articleId);
+  else readIds.add(articleId);
+  persistReadIds();
+  render();
+}
+
+// 등록일이 가장 최근인 5개. 같은 날짜면 시트에서 아래쪽(나중에 추가한) 행을 더 최신으로 본다.
+const NEW_COUNT = 5;
+function computeNewIds(rows) {
+  return new Set(
+    rows
+      .map((r, i) => ({ r, i }))
+      .sort((a, b) => (a.r.date < b.r.date ? 1 : a.r.date > b.r.date ? -1 : b.i - a.i))
+      .slice(0, NEW_COUNT)
+      .map(x => hashId(x.r.title))
+  );
+}
+
+function updateReadFilterOptions() {
+  const sel = document.getElementById('filter-read');
+  if (!sel) return;
+  const readCount = allRows.filter(r => readIds.has(hashId(r.title))).length;
+  sel.options[1].textContent = `안 읽은 글 (${allRows.length - readCount})`;
+  sel.options[2].textContent = `읽은 글 (${readCount})`;
+}
 
 function loadSavedIds() {
   try {
@@ -1908,6 +1993,8 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
+const rowOrder = new Map(); // 아티클 → 시트 행 순서
+
 function getFiltered() {
   const q = document.getElementById('search-input').value.trim().toLowerCase();
   const cat = document.getElementById('filter-category').value;
@@ -1921,6 +2008,8 @@ function getFiltered() {
     if (stat && r.status !== stat) return false;
     if (mustOnly && !r.status.includes('Must')) return false;
     if (savedOnly && !savedIds.has(hashId(r.title))) return false;
+    if (readFilter === 'read' && !readIds.has(hashId(r.title))) return false;
+    if (readFilter === 'unread' && readIds.has(hashId(r.title))) return false;
     if (!inDateRange(r.date)) return false;
     if (q) {
       const hay = (r.title + ' ' + r.summary + ' ' + r.tag + ' ' + r.source).toLowerCase();
@@ -1942,7 +2031,10 @@ function getFiltered() {
       if (a.date < b.date) return 1;
       if (a.date > b.date) return -1;
     }
-    return 0;
+    // 같은 날짜: 시트에서 나중에 추가한 행을 더 최신으로
+    const ai = rowOrder.get(a) ?? 0, bi = rowOrder.get(b) ?? 0;
+    const newerFirst = !(sortState.col === 'date' && sortState.dir === 'asc');
+    return newerFirst ? bi - ai : ai - bi;
   });
 
   return rows;
@@ -2008,6 +2100,8 @@ function resetAllFilters() {
   document.getElementById('mustread-toggle').classList.remove('active');
   document.getElementById('saved-toggle').classList.remove('active');
   savedOnly = false;
+  readFilter = '';
+  document.getElementById('filter-read').value = '';
   document.getElementById('filter-period').value = 'all';
   document.getElementById('filter-date-start').value = '';
   document.getElementById('filter-date-end').value = '';
@@ -2113,6 +2207,7 @@ function renderActiveFilters() {
     chips.push({ key: 'period', label });
   }
   if (savedOnly) chips.push({ key: 'saved', label: '저장한 아티클' });
+  if (readFilter) chips.push({ key: 'read', label: readFilter === 'read' ? '읽은 아티클' : '안 읽은 아티클' });
   if (q) chips.push({ key: 'search', label: `"${q}"` });
 
   if (chips.length === 0) {
@@ -2134,6 +2229,7 @@ function clearChip(key) {
   if (key === 'status') document.getElementById('filter-status').value = '';
   if (key === 'mustread') document.getElementById('mustread-toggle').classList.remove('active');
   if (key === 'saved') { savedOnly = false; document.getElementById('saved-toggle').classList.remove('active'); }
+  if (key === 'read') { readFilter = ''; document.getElementById('filter-read').value = ''; }
   if (key === 'search') document.getElementById('search-input').value = '';
   if (key === 'period') {
     dateFilter = { mode: 'all', start: '', end: '' };
@@ -2151,6 +2247,7 @@ function render() {
   renderWeeklyPopular();
   renderRecommendedPopular();
   renderActiveFilters();
+  updateReadFilterOptions();
   const rows = getFiltered();
   const area = document.getElementById('content-area');
 
@@ -2163,6 +2260,13 @@ function render() {
   }
 
   if (rows.length === 0) {
+    if (readFilter && !savedOnly) {
+      area.innerHTML = `<div class="state-box">
+        <div class="big">${readFilter === 'read' ? '아직 읽은 아티클이 없습니다' : '모든 아티클을 읽었어요 👏'}</div>
+        <div class="empty-hint">${readFilter === 'read' ? "'원문 보기'를 누르면 읽은 아티클로 표시돼요." : '새 아티클이 올라오면 여기에 나타나요.'}</div>
+      </div>`;
+      return;
+    }
     if (savedOnly) {
       area.innerHTML = `<div class="state-box">
         <div class="big">저장한 아티클이 없습니다.</div>
@@ -2195,11 +2299,13 @@ function render() {
     const views = viewCounts[articleId] || 0;
     const isHot = views >= 3;
     const flashClass = articleId === flashRowId ? 'flash-highlight' : '';
-    html += `<tr class="row ${isOpen ? 'expanded' : ''} ${r.status.includes('아카이브') ? 'is-archived' : ''} ${flashClass}" data-idx="${i}" data-article-id="${articleId}">
+    const isRead = readIds.has(articleId);
+    const isNew = newIds.has(articleId);
+    html += `<tr class="row ${isOpen ? 'expanded' : ''} ${r.status.includes('아카이브') ? 'is-archived' : ''} ${isRead ? 'is-read' : ''} ${flashClass}" data-idx="${i}" data-article-id="${articleId}">
       <td><span class="stars">${escapeHtml(r.importance)}</span></td>
       <td><span class="tag">${escapeHtml(r.category)}</span></td>
       <td class="col-source">${escapeHtml(r.source)}<span class="col-region">${escapeHtml(r.region)}</span></td>
-      <td class="col-title"><div class="headline">${escapeHtml(r.title)}</div><div class="subtag">${escapeHtml(r.tag)}</div></td>
+      <td class="col-title"><div class="headline">${isNew ? '<span class="new-badge">NEW</span>' : ''}${escapeHtml(r.title)}</div><div class="subtag">${escapeHtml(r.tag)}${isRead ? '<span class="read-mark">✓ 읽음</span>' : ''}</div></td>
       <td class="col-summary">${escapeHtml(r.summary)}</td>
       <td class="col-views">${views}${isHot ? ' <span class="hot-badge">🔥</span>' : ''}</td>
       <td><span class="status-badge ${statusClass(r.status)}">${escapeHtml(r.status)}</span></td>
@@ -2214,7 +2320,7 @@ function render() {
         <div class="detail-block"><div class="h">WHY IT MATTERS / 에코 시사점</div><div class="v">${escapeHtml(r.why) || '—'}</div></div>
         <div class="detail-block"><div class="h">추천 대상 · 열람 구분</div><div class="v">${escapeHtml(r.audience) || '—'} · ${escapeHtml(r.access) || '—'}</div></div>
         <div class="detail-block detail-full">
-          ${r.link ? `<a class="detail-link" href="${escapeHtml(r.link)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">원문 보기 ↗</a>` : ''}
+          ${r.link ? `<a class="detail-link" data-read-link="${articleId}" href="${escapeHtml(r.link)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">원문 보기 ↗</a>` : ''}
         </div>
         ${related.length > 0 ? `
         <div class="detail-block detail-full related-block">
@@ -2232,6 +2338,10 @@ function render() {
             <span class="fb-thumb">👍</span>
             <span class="fb-text">${voted ? '추천했어요 ✓' : '도움이 됐어요'}</span>
             <span class="fb-count">${helpful}</span>
+          </button>
+          <button class="fb-btn read-btn ${isRead ? 'voted' : ''}" data-read-id="${articleId}" aria-pressed="${isRead ? 'true' : 'false'}" title="${isRead ? '누르면 안 읽음으로 바뀌어요' : '읽은 아티클로 표시해요'}">
+            <span class="fb-thumb">✓</span>
+            <span class="fb-text">${isRead ? '읽음' : '읽음으로 표시'}</span>
           </button>
           <button class="fb-btn save-btn ${saved ? 'voted' : ''}" data-save-id="${articleId}">
             <span class="fb-thumb">🔖</span>
@@ -2263,6 +2373,21 @@ function render() {
     });
   });
 
+  area.querySelectorAll('[data-read-id]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleRead(btn.dataset.readId);
+    });
+  });
+
+  // '원문 보기'를 누르면 읽음 처리 (새 탭이 열린 뒤에 화면 갱신)
+  area.querySelectorAll('[data-read-link]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (markRead(a.dataset.readLink)) setTimeout(render, 300);
+    });
+  });
+
   area.querySelectorAll('[data-save-id]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -2290,7 +2415,10 @@ function render() {
 
 async function init() {
   allRows = ARTICLES;
+  allRows.forEach((r, i) => rowOrder.set(r, i));
+  newIds = computeNewIds(allRows);
   savedIds = loadSavedIds();
+  readIds = loadReadIds();
   populateFilterOptions(allRows);
   updateStats(allRows);
   document.getElementById('filters').style.display = 'flex';
@@ -2323,9 +2451,14 @@ document.getElementById('filter-date-end').addEventListener('change', (e) => {
   render();
 });
 document.getElementById('sort-select').addEventListener('change', (e) => {
-  const map = { latest: 'date', views: 'views', helpful: 'helpful', importance: 'importance' };
+  const map = { latest: 'date', oldest: 'date', views: 'views', helpful: 'helpful', importance: 'importance' };
   sortState.col = map[e.target.value] || 'date';
-  sortState.dir = 'desc';
+  sortState.dir = e.target.value === 'oldest' ? 'asc' : 'desc';
+  expandedId = null;
+  render();
+});
+document.getElementById('filter-read').addEventListener('change', (e) => {
+  readFilter = e.target.value;
   expandedId = null;
   render();
 });
